@@ -1,10 +1,36 @@
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "6.9.0"
+    }
+  }
+}
+
 provider "aws" {
   region = "us-east-2"
 }
 
-resource "aws_instance" "test" {
-  ami           = "ami-0169aa51f6faf20d5" # Amazon Linux 2023
+data "aws_ami" "ubuntu" {
+  most_recent = true
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-kernel-6.1-x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  owners = ["amazon"]
+}
+
+resource "aws_instance" "web" {
+  ami           = data.aws_ami.ubuntu.id
   instance_type = "t2.micro"
+
   vpc_security_group_ids = [aws_security_group.test_group.id]
 
   # Script para instalar e configurar o servidor web Apache
